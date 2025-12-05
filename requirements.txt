@@ -1,0 +1,3 @@
+# No additional requirements
+# This node uses only standard ComfyUI dependencies (torch, PIL, numpy)
+# Training is handled by external tools (AI-Toolkit, sd-scripts) in their own venvs

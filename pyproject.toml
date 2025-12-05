@@ -1,0 +1,19 @@
+[project]
+name = "comfyui-realtime-lora"
+description = "Train LoRAs directly inside ComfyUI for SDXL, FLUX, Z-Image Turbo, and Wan 2.2"
+version = "1.0.0"
+license = "MIT"
+authors = [
+    { name = "Peter Neill" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/ShootTheSound/comfyUI-Realtime-Lora"
+Repository = "https://github.com/ShootTheSound/comfyUI-Realtime-Lora"
+Issues = "https://github.com/ShootTheSound/comfyUI-Realtime-Lora/issues"
+
+[tool.comfy]
+node_class_mappings = "NODE_CLASS_MAPPINGS"
+node_display_name_mappings = "NODE_DISPLAY_NAME_MAPPINGS"
