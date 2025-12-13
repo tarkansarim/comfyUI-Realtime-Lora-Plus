@@ -277,11 +277,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "SaveImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "SaveImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "ComfyUI"
@@ -552,11 +553,12 @@
       "properties": {
         "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
         "ver": "bf44ba8ffde7ac74b4b270040180622c05c02b89",
+        "Node name for S&R": "ApplyTrainedLora",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "ApplyTrainedLora"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         1
@@ -595,12 +597,12 @@
       "properties": {
         "cnr_id": "comfyui-custom-scripts",
         "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss",
         "ue_properties": {
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.5.1"
-        },
-        "Node name for S&R": "ShowText|pysssss"
+        }
       },
       "widgets_values": [
         "s:\\auto\\musubi-tuner\\output\\MyQwenLora_20251211_222716.safetensors"
@@ -664,6 +666,35 @@
       ]
     },
     {
+      "id": 30,
+      "type": "Note",
+      "pos": [
+        853.5180329067512,
+        582.2755531681021
+      ],
+      "size": [
+        659.3771760560459,
+        417.01525595841304
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "This workflow for edit loras that use control images too.  Paste in your paths.  You'll need to provide your own dataset for this workflow, but i've described exactly what you have to do below.\n\nImages Path contains your target/result images (the \"after\" or post-edit images) along with .txt caption files describing the edit instruction. \n\nControl Images Path contains the source images (the \"before\" or pre-edit images) that get edited. Images are matched by filename between the two folders. \n\nFor example, if you want to train the model to add hats: place the original photos in Control Images Path, place the edited photos with hats in Images Path, and create matching .txt files in Images       \npath with captions like \"add a red hat\". \n\nThe model learns: given this source image + this instruction → produce this result.\n___\n\nPath to you msubi tuner install\n\nSelect edit model mode \n\nQwen Image Edit 2509 model you need for training:\nhttps://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_bf16.safetensors\n\nYour Qwen image vae\n\nQwen image Text encoder, qwen_2.5_vl_7b.safetensors  (not fp8 etc)\nhttps://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b.safetensors\n\n______\nNote the Agressive block swapping, feel free to lower!!\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
       "id": 31,
       "type": "MusubiQwenImageEditLoraTrainer",
       "pos": [
@@ -675,7 +706,7 @@
         370
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -690,11 +721,12 @@
       "properties": {
         "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
         "ver": "bf44ba8ffde7ac74b4b270040180622c05c02b89",
+        "Node name for S&R": "MusubiQwenImageEditLoraTrainer",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "MusubiQwenImageEditLoraTrainer"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "c:\\path1",
@@ -714,29 +746,6 @@
       ],
       "ndSuperSelectorEnabled": false,
       "ndPowerEnabled": false
-    },
-    {
-      "id": 30,
-      "type": "Note",
-      "pos": [
-        853.5180329067512,
-        582.2755531681021
-      ],
-      "size": [
-        659.3771760560459,
-        417.01525595841304
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "This workflow for edit loras that use control images too.  Paste in your paths.  You'll need to provide your own dataset for this workflow, but i've described exactly what you have to do below.\n\nImages Path contains your target/result images (the \"after\" or post-edit images) along with .txt caption files describing the edit instruction. \n\nControl Images Path contains the source images (the \"before\" or pre-edit images) that get edited. Images are matched by filename between the two folders. \n\nFor example, if you want to train the model to add hats: place the original photos in Control Images Path, place the edited photos with hats in Images Path, and create matching .txt files in Images       \npath with captions like \"add a red hat\". \n\nThe model learns: given this source image + this instruction → produce this result.\n___\n\nPath to you msubi tuner install\n\nSelect edit model mode \n\nQwen Image Edit 2509 model you need for training:\nhttps://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_bf16.safetensors\n\nYour Qwen image vae\n\nQwen image Text encoder, qwen_2.5_vl_7b.safetensors  (not fp8 etc)\nhttps://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b.safetensors\n\n______\nNote the Agressive block swapping, feel free to lower!!\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -889,10 +898,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.553522046476939,
+      "scale": 0.7972024500000015,
       "offset": [
-        -675.153866761751,
-        -23.040313692254244
+        -320.59922468723863,
+        160.69452110431973
       ]
     },
     "frontendVersion": "1.32.9",

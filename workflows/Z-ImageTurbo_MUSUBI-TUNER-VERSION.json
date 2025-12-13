@@ -1009,6 +1009,7 @@
       "widgets_values": [
         4,
         "",
+        "",
         "S:\\Auto\\musubi-tuner",
         "z_image_de_turbo_v1_bf16.safetensors",
         "ae.sft",
@@ -1018,7 +1019,7 @@
         0.0002,
         16,
         "Low (768px)",
-        true,
+        "MyLora",
         "MyLora"
       ],
       "ndSuperSelectorEnabled": false,
@@ -1199,10 +1200,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7972024500000005,
+      "scale": 1.4122927695244514,
       "offset": [
-        1423.417453526804,
-        489.9759795343362
+        1163.7778851458522,
+        -362.93961904343246
       ]
     },
     "frontendVersion": "1.32.9",

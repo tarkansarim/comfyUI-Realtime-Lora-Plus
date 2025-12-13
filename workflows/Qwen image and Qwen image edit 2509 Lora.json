@@ -20,33 +20,13 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 36
-        },
-        {
-          "localized_name": "lora_name",
-          "name": "lora_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "lora_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "strength_model",
-          "name": "strength_model",
-          "type": "FLOAT",
-          "widget": {
-            "name": "strength_model"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -87,13 +67,11 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "pixels",
           "name": "pixels",
           "type": "IMAGE",
           "link": 15
         },
         {
-          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 12
@@ -101,7 +79,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "LATENT",
           "name": "LATENT",
           "type": "LATENT",
           "links": [
@@ -137,7 +114,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "conditioning",
           "name": "conditioning",
           "type": "CONDITIONING",
           "link": 19
@@ -145,7 +121,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "CONDITIONING",
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
@@ -181,87 +156,28 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 18
         },
         {
-          "localized_name": "positive",
           "name": "positive",
           "type": "CONDITIONING",
           "link": 4
         },
         {
-          "localized_name": "negative",
           "name": "negative",
           "type": "CONDITIONING",
           "link": 20
         },
         {
-          "localized_name": "latent_image",
           "name": "latent_image",
           "type": "LATENT",
           "link": 13
-        },
-        {
-          "localized_name": "seed",
-          "name": "seed",
-          "type": "INT",
-          "widget": {
-            "name": "seed"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "steps",
-          "name": "steps",
-          "type": "INT",
-          "widget": {
-            "name": "steps"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "cfg",
-          "name": "cfg",
-          "type": "FLOAT",
-          "widget": {
-            "name": "cfg"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "sampler_name",
-          "name": "sampler_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "sampler_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "scheduler",
-          "name": "scheduler",
-          "type": "COMBO",
-          "widget": {
-            "name": "scheduler"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "denoise",
-          "name": "denoise",
-          "type": "FLOAT",
-          "widget": {
-            "name": "denoise"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "LATENT",
           "name": "LATENT",
           "type": "LATENT",
           "links": [
@@ -305,13 +221,11 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "samples",
           "name": "samples",
           "type": "LATENT",
           "link": 7
         },
         {
-          "localized_name": "vae",
           "name": "vae",
           "type": "VAE",
           "link": 8
@@ -319,7 +233,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -355,30 +268,21 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "images",
           "name": "images",
           "type": "IMAGE",
           "link": 21
-        },
-        {
-          "localized_name": "filename_prefix",
-          "name": "filename_prefix",
-          "type": "STRING",
-          "widget": {
-            "name": "filename_prefix"
-          },
-          "link": null
         }
       ],
       "outputs": [],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "SaveImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "SaveImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "ComfyUI"
@@ -398,29 +302,9 @@
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -428,7 +312,6 @@
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -437,11 +320,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "LoadImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "231030083831-unseen-monet-auction.jpg",
@@ -462,20 +346,9 @@
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "String",
-          "name": "String",
-          "type": "STRING",
-          "widget": {
-            "name": "String"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -486,11 +359,12 @@
       "properties": {
         "cnr_id": "ComfyLiterals",
         "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "String"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "zwxem style painting of a lady and a toddler sitting on the ground in front of a field of flowers"
@@ -510,29 +384,9 @@
       "flags": {},
       "order": 2,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -540,7 +394,6 @@
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -549,11 +402,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "LoadImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "Monet-Camille.jpg",
@@ -574,29 +428,9 @@
       "flags": {},
       "order": 3,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -604,7 +438,6 @@
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -613,11 +446,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "LoadImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "fd4a2b62395c7281b28501fdc14421d6.jpg",
@@ -638,29 +472,9 @@
       "flags": {},
       "order": 4,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -668,7 +482,6 @@
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -677,11 +490,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "LoadImage"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "Claude-Monet-San-Giorgio-Maggiore-at-Dusk_2048x.webp",
@@ -702,20 +516,9 @@
       "flags": {},
       "order": 5,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "String",
-          "name": "String",
-          "type": "STRING",
-          "widget": {
-            "name": "String"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -726,11 +529,12 @@
       "properties": {
         "cnr_id": "ComfyLiterals",
         "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "String"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "zwxem style painting of water lillys AND lily pads floating in a pond"
@@ -750,20 +554,9 @@
       "flags": {},
       "order": 6,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "String",
-          "name": "String",
-          "type": "STRING",
-          "widget": {
-            "name": "String"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -774,11 +567,12 @@
       "properties": {
         "cnr_id": "ComfyLiterals",
         "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "String"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "zwxem style painting of the silhouette of a town on the edge of a lake at sunset."
@@ -798,20 +592,9 @@
       "flags": {},
       "order": 7,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "String",
-          "name": "String",
-          "type": "STRING",
-          "widget": {
-            "name": "String"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "type": "STRING",
           "links": [
@@ -822,11 +605,12 @@
       "properties": {
         "cnr_id": "ComfyLiterals",
         "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "String"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         "zwxem style painting of a lady in a white dress standing in the grass holding an umbrella. blue sky behind her. A small child is also behind her."
@@ -846,29 +630,9 @@
       "flags": {},
       "order": 8,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "unet_name",
-          "name": "unet_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "unet_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "weight_dtype",
-          "name": "weight_dtype",
-          "type": "COMBO",
-          "widget": {
-            "name": "weight_dtype"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "MODEL",
           "name": "MODEL",
           "type": "MODEL",
           "links": [
@@ -907,29 +671,9 @@
       "flags": {},
       "order": 9,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image",
-          "name": "image",
-          "type": "COMBO",
-          "widget": {
-            "name": "image"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -937,7 +681,6 @@
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
           "links": null
@@ -974,38 +717,25 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "clip",
           "name": "clip",
           "type": "CLIP",
           "link": 1
         },
         {
-          "localized_name": "vae",
           "name": "vae",
           "shape": 7,
           "type": "VAE",
           "link": 2
         },
         {
-          "localized_name": "image",
           "name": "image",
           "shape": 7,
           "type": "IMAGE",
           "link": 16
-        },
-        {
-          "localized_name": "prompt",
-          "name": "prompt",
-          "type": "STRING",
-          "widget": {
-            "name": "prompt"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "CONDITIONING",
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
@@ -1044,33 +774,13 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "image",
           "name": "image",
           "type": "IMAGE",
           "link": 14
-        },
-        {
-          "localized_name": "upscale_method",
-          "name": "upscale_method",
-          "type": "COMBO",
-          "widget": {
-            "name": "upscale_method"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "megapixels",
-          "name": "megapixels",
-          "type": "FLOAT",
-          "widget": {
-            "name": "megapixels"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
@@ -1108,39 +818,9 @@
       "flags": {},
       "order": 10,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "clip_name",
-          "name": "clip_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "clip_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "type",
-          "name": "type",
-          "type": "COMBO",
-          "widget": {
-            "name": "type"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "device",
-          "name": "device",
-          "shape": 7,
-          "type": "COMBO",
-          "widget": {
-            "name": "device"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "CLIP",
           "name": "CLIP",
           "type": "CLIP",
           "links": [
@@ -1180,20 +860,9 @@
       "flags": {},
       "order": 11,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "vae_name",
-          "name": "vae_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "vae_name"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "VAE",
           "name": "VAE",
           "type": "VAE",
           "links": [
@@ -1235,30 +904,18 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "link": 35
         },
         {
-          "localized_name": "lora_path",
           "name": "lora_path",
           "type": "STRING",
           "link": 34
-        },
-        {
-          "localized_name": "strength",
-          "name": "strength",
-          "type": "FLOAT",
-          "widget": {
-            "name": "strength"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
           "links": [
@@ -1266,13 +923,11 @@
           ]
         },
         {
-          "localized_name": "lora_name",
           "name": "lora_name",
           "type": "STRING",
           "links": null
         },
         {
-          "localized_name": "lora_path",
           "name": "lora_path",
           "type": "STRING",
           "links": [
@@ -1283,11 +938,12 @@
       "properties": {
         "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
         "ver": "bf44ba8ffde7ac74b4b270040180622c05c02b89",
+        "Node name for S&R": "ApplyTrainedLora",
         "ue_properties": {
           "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "ApplyTrainedLora"
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
       },
       "widgets_values": [
         1
@@ -1309,7 +965,6 @@
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "text",
           "name": "text",
           "type": "STRING",
           "link": 37
@@ -1317,7 +972,6 @@
       ],
       "outputs": [
         {
-          "localized_name": "STRING",
           "name": "STRING",
           "shape": 6,
           "type": "STRING",
@@ -1328,262 +982,16 @@
       "properties": {
         "cnr_id": "comfyui-custom-scripts",
         "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss",
         "ue_properties": {
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},
           "version": "7.5.1"
-        },
-        "Node name for S&R": "ShowText|pysssss"
+        }
       },
       "widgets_values": [
         "s:\\auto\\musubi-tuner\\output\\MyQwenLora_20251211_222716.safetensors"
       ]
-    },
-    {
-      "id": 15,
-      "type": "MusubiQwenImageLoraTrainer",
-      "pos": [
-        315.5647405985797,
-        689.4892417234134
-      ],
-      "size": [
-        431.866796875,
-        564
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "image_1",
-          "name": "image_1",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 22
-        },
-        {
-          "localized_name": "caption_1",
-          "name": "caption_1",
-          "shape": 7,
-          "type": "STRING",
-          "link": 30
-        },
-        {
-          "localized_name": "image_2",
-          "name": "image_2",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 23
-        },
-        {
-          "localized_name": "caption_2",
-          "name": "caption_2",
-          "shape": 7,
-          "type": "STRING",
-          "link": 31
-        },
-        {
-          "localized_name": "image_3",
-          "name": "image_3",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 24
-        },
-        {
-          "localized_name": "caption_3",
-          "name": "caption_3",
-          "shape": 7,
-          "type": "STRING",
-          "link": 32
-        },
-        {
-          "localized_name": "image_4",
-          "name": "image_4",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 25
-        },
-        {
-          "localized_name": "caption_4",
-          "name": "caption_4",
-          "shape": 7,
-          "type": "STRING",
-          "link": 33
-        },
-        {
-          "localized_name": "inputcount",
-          "name": "inputcount",
-          "type": "INT",
-          "widget": {
-            "name": "inputcount"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "images_path",
-          "name": "images_path",
-          "type": "STRING",
-          "widget": {
-            "name": "images_path"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "musubi_path",
-          "name": "musubi_path",
-          "type": "STRING",
-          "widget": {
-            "name": "musubi_path"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "model_mode",
-          "name": "model_mode",
-          "type": "COMBO",
-          "widget": {
-            "name": "model_mode"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "dit_model",
-          "name": "dit_model",
-          "type": "COMBO",
-          "widget": {
-            "name": "dit_model"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "vae_model",
-          "name": "vae_model",
-          "type": "COMBO",
-          "widget": {
-            "name": "vae_model"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "text_encoder",
-          "name": "text_encoder",
-          "type": "COMBO",
-          "widget": {
-            "name": "text_encoder"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "caption",
-          "name": "caption",
-          "type": "STRING",
-          "widget": {
-            "name": "caption"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "training_steps",
-          "name": "training_steps",
-          "type": "INT",
-          "widget": {
-            "name": "training_steps"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "learning_rate",
-          "name": "learning_rate",
-          "type": "FLOAT",
-          "widget": {
-            "name": "learning_rate"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "lora_rank",
-          "name": "lora_rank",
-          "type": "INT",
-          "widget": {
-            "name": "lora_rank"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "vram_mode",
-          "name": "vram_mode",
-          "type": "COMBO",
-          "widget": {
-            "name": "vram_mode"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "blocks_to_swap",
-          "name": "blocks_to_swap",
-          "type": "COMBO",
-          "widget": {
-            "name": "blocks_to_swap"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "keep_lora",
-          "name": "keep_lora",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "keep_lora"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "output_name",
-          "name": "output_name",
-          "type": "STRING",
-          "widget": {
-            "name": "output_name"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "localized_name": "lora_path",
-          "name": "lora_path",
-          "type": "STRING",
-          "links": [
-            34
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
-        "ver": "bf44ba8ffde7ac74b4b270040180622c05c02b89",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        },
-        "Node name for S&R": "MusubiQwenImageLoraTrainer"
-      },
-      "widgets_values": [
-        4,
-        "",
-        "s:\\auto\\musubi-tuner",
-        "Qwen-Image-Edit-2509",
-        "qwen_image_edit_2509_bf16.safetensors",
-        "qwen_image_vae.safetensors",
-        "qwen_2.5_vl_7b.safetensors",
-        "photo of subject",
-        500,
-        0.0003,
-        16,
-        "Low (512px) fp8",
-        "40",
-        true,
-        "MyQwenLora"
-      ],
-      "ndSuperSelectorEnabled": false,
-      "ndPowerEnabled": false
     },
     {
       "id": 30,
@@ -1601,12 +1009,122 @@
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "\nPath to you msubi tuner install\n\nSelect model mode ( this workflow is for normal loras without control images for Qwen image or Qwen image edit, depending on what you choose in the model mode input)\n\nQwen Image Edit model you need for training:\nhttps://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_bf16.safetensors\n\nQwen image model you need for training:\n\nhttps://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_bf16.safetensors\n\nYour Qwen image vae\n\nQwen image Text encoder, qwen_2.5_vl_7b.safetensors  (not fp8 etc)\nhttps://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b.safetensors\n\n______\nNote the Agressive block swapping, feel free to lower!!\n"
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 15,
+      "type": "MusubiQwenImageLoraTrainer",
+      "pos": [
+        315.5647405985797,
+        689.4892417234134
+      ],
+      "size": [
+        431.866796875,
+        588
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "name": "caption_1",
+          "shape": 7,
+          "type": "STRING",
+          "link": 30
+        },
+        {
+          "name": "image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "caption_2",
+          "shape": 7,
+          "type": "STRING",
+          "link": 31
+        },
+        {
+          "name": "image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "caption_3",
+          "shape": 7,
+          "type": "STRING",
+          "link": 32
+        },
+        {
+          "name": "image_4",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 25
+        },
+        {
+          "name": "caption_4",
+          "shape": 7,
+          "type": "STRING",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lora_path",
+          "type": "STRING",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
+        "ver": "bf44ba8ffde7ac74b4b270040180622c05c02b89",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        },
+        "Node name for S&R": "MusubiQwenImageLoraTrainer"
+      },
+      "widgets_values": [
+        4,
+        "",
+        "",
+        "s:\\auto\\musubi-tuner",
+        "Qwen-Image-Edit-2509",
+        "qwen_image_edit_2509_bf16.safetensors",
+        "qwen_image_vae.safetensors",
+        "qwen_2.5_vl_7b.safetensors",
+        "",
+        500,
+        0.0003,
+        16,
+        "Low (512px) fp8",
+        "40",
+        "MyQwenLora",
+        "MyQwenLora"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
     }
   ],
   "links": [
@@ -1823,13 +1341,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.2839025177495331,
+      "scale": 0.7972024500000038,
       "offset": [
-        -252.81418504195005,
-        -394.739285536482
+        142.13746975099141,
+        -179.87826298507719
       ]
     },
-    "frontendVersion": "1.25.9",
+    "frontendVersion": "1.32.9",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
