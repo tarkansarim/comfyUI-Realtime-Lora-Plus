@@ -27,18 +27,23 @@ def _detect_architecture(keys):
     if any('transformer_blocks' in k and any(x in k for x in ['img_mlp', 'txt_mlp', 'img_mod', 'txt_mod']) for k in keys_lower):
         return 'QWEN_IMAGE'
 
+    # Check for Flux AI-Toolkit format (transformer.single_transformer_blocks / transformer.double_blocks)
+    # Must check BEFORE Z-Image since both have single_transformer_blocks
+    if any('transformer.single_transformer_blocks' in k or 'transformer.double_blocks' in k for k in keys_lower):
+        return 'FLUX'
+
     # Check for Z-Image patterns:
     # - diffusion_model.layers.N.attention/adaLN_modulation (ComfyUI/AI-Toolkit format)
     # - lora_unet_layers_N_attention (Musubi Tuner format)
-    # - single_transformer_blocks (older format)
+    # - single_transformer_blocks WITHOUT transformer. prefix (older Z-Image format)
     if any('diffusion_model.layers.' in k and ('attention' in k or 'adaln' in k.lower()) for k in keys_lower):
         return 'ZIMAGE'
     if any('lora_unet_layers_' in k and 'attention' in k for k in keys_lower):
         return 'ZIMAGE'
-    if any('single_transformer_blocks' in k for k in keys_lower):
+    if any('single_transformer_blocks' in k and 'transformer.single_transformer_blocks' not in k for k in keys_lower):
         return 'ZIMAGE'
 
-    # Check for Flux (double_blocks/single_blocks)
+    # Check for Flux (double_blocks/single_blocks - ComfyUI/other formats)
     if any('double_blocks' in k or 'single_blocks' in k for k in keys_lower):
         return 'FLUX'
 
@@ -104,9 +109,14 @@ def _extract_block_id(key: str, architecture: str) -> str:
         return f"block_{match.group(1)}" if match else 'other'
 
     elif architecture == 'FLUX':
-        double = re.search(r'double_blocks[._]?(\d+)', key_lower)
+        # AI-Toolkit format: transformer.double_blocks.N or transformer.single_transformer_blocks.N
+        double = re.search(r'(?:transformer\.)?double_blocks?[._]?(\d+)', key_lower)
         if double:
             return f"double_{double.group(1)}"
+        # Check for single_transformer_blocks (AI-Toolkit) or single_blocks (other formats)
+        single = re.search(r'single_transformer_blocks[._]?(\d+)', key_lower)
+        if single:
+            return f"single_{single.group(1)}"
         single = re.search(r'single_blocks[._]?(\d+)', key_lower)
         if single:
             return f"single_{single.group(1)}"
