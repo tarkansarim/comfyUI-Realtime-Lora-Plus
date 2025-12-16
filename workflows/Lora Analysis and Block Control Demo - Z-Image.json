@@ -1,8 +1,8 @@
 {
   "id": "92112d97-bb64-4b44-86f2-ea5691ef8f6e",
   "revision": 0,
-  "last_node_id": 99,
-  "last_link_id": 228,
+  "last_node_id": 100,
+  "last_link_id": 234,
   "nodes": [
     {
       "id": 87,
@@ -109,8 +109,8 @@
           "type": "CLIP",
           "links": [
             144,
-            219,
-            225
+            225,
+            230
           ]
         }
       ],
@@ -190,7 +190,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 223
+          "link": 233
         }
       ],
       "outputs": [
@@ -427,7 +427,7 @@
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 222
+          "link": 234
         }
       ],
       "outputs": [
@@ -483,7 +483,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            218
+            229
           ]
         }
       ],
@@ -612,146 +612,6 @@
       "bgcolor": "#533"
     },
     {
-      "id": 98,
-      "type": "ZImageSelectiveLoRALoader",
-      "pos": [
-        -2568.371526529989,
-        -2011.0448417487046
-      ],
-      "size": [
-        500,
-        910
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 218
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 219
-        },
-        {
-          "name": "lora_path_opt",
-          "shape": 7,
-          "type": "STRING",
-          "link": 226
-        },
-        {
-          "name": "analysis_json",
-          "shape": 7,
-          "type": "STRING",
-          "link": 227
-        }
-      ],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "links": [
-            223
-          ]
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "links": [
-            222
-          ]
-        },
-        {
-          "name": "info",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
-        "ver": "a4e5b6615b5ded71abdca1558663ddd6ee665a3c",
-        "Node name for S&R": "ZImageSelectiveLoRALoader",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.5.1"
-        }
-      },
-      "widgets_values": [
-        "FLUX\\1950s Hollywood glamour..safetensors",
-        1,
-        "Half Strength",
-        "Custom",
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5,
-        true,
-        0.5
-      ],
-      "ndSuperSelectorEnabled": false,
-      "ndPowerEnabled": false
-    },
-    {
       "id": 99,
       "type": "LoRALoaderWithAnalysis",
       "pos": [
@@ -799,15 +659,92 @@
           "name": "analysis_json",
           "type": "STRING",
           "links": [
-            227
+            232
           ]
         },
         {
           "name": "lora_path",
           "type": "STRING",
           "links": [
-            226
+            231
           ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
+        "ver": "a4e5b6615b5ded71abdca1558663ddd6ee665a3c",
+        "Node name for S&R": "LoRALoaderWithAnalysis",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "zimage\\20s_horror_z_100.safetensors",
+        1,
+        1
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 100,
+      "type": "ZImageSelectiveLoRALoader",
+      "pos": [
+        -2552.4562724957777,
+        -2018.0461972467117
+      ],
+      "size": [
+        500,
+        910
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 229
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 230
+        },
+        {
+          "name": "lora_path_opt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 231
+        },
+        {
+          "name": "analysis_json",
+          "shape": 7,
+          "type": "STRING",
+          "link": 232
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            233
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            234
+          ]
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
@@ -817,11 +754,73 @@
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {}
         },
-        "Node name for S&R": "LoRALoaderWithAnalysis"
+        "Node name for S&R": "ZImageSelectiveLoRALoader"
       },
       "widgets_values": [
-        "zimage\\20s_horror_z_100.safetensors",
+        "FLUX\\1950s Hollywood glamour..safetensors",
         1,
+        "Default",
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        true,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
+        1,
+        false,
         1
       ],
       "ndSuperSelectorEnabled": false,
@@ -902,38 +901,6 @@
       "MODEL"
     ],
     [
-      218,
-      90,
-      0,
-      98,
-      0,
-      "MODEL"
-    ],
-    [
-      219,
-      76,
-      0,
-      98,
-      1,
-      "CLIP"
-    ],
-    [
-      222,
-      98,
-      1,
-      74,
-      0,
-      "CLIP"
-    ],
-    [
-      223,
-      98,
-      0,
-      70,
-      0,
-      "MODEL"
-    ],
-    [
       224,
       77,
       0,
@@ -950,38 +917,70 @@
       "CLIP"
     ],
     [
-      226,
-      99,
-      4,
-      98,
-      2,
-      "STRING"
-    ],
-    [
-      227,
-      99,
-      3,
-      98,
-      3,
-      "STRING"
-    ],
-    [
       228,
       99,
       2,
       87,
       0,
       "STRING"
+    ],
+    [
+      229,
+      90,
+      0,
+      100,
+      0,
+      "MODEL"
+    ],
+    [
+      230,
+      76,
+      0,
+      100,
+      1,
+      "CLIP"
+    ],
+    [
+      231,
+      99,
+      4,
+      100,
+      2,
+      "STRING"
+    ],
+    [
+      232,
+      99,
+      3,
+      100,
+      3,
+      "STRING"
+    ],
+    [
+      233,
+      100,
+      0,
+      70,
+      0,
+      "MODEL"
+    ],
+    [
+      234,
+      100,
+      1,
+      74,
+      0,
+      "CLIP"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7972024500000011,
+      "scale": 0.7972024500000007,
       "offset": [
-        4642.076028588233,
-        2487.9809450043704
+        3549.693548924114,
+        2389.3446045709725
       ]
     },
     "frontendVersion": "1.34.8",
