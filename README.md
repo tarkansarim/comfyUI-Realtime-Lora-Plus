@@ -152,6 +152,8 @@ There are critical example workflows with useful info included in the custom_nod
 
 Beyond training, this toolkit includes tools for understanding and fine-tuning how LoRAs affect your generations.
 
+[![LoRA Analysis Demo](https://img.youtube.com/vi/dkEB5i5yBUI/0.jpg)](https://www.youtube.com/watch?v=dkEB5i5yBUI)
+
 ### LoRA Loader + Analyzer
 
 The analyzer loads any LoRA and shows you which blocks have the most impact. It calculates a "strength" score (0-100%) for each block based on the weight magnitudes in that block. High-impact blocks are where the LoRA learned the most - these are often the blocks responsible for the subject's face, style, or composition.
