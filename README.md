@@ -1,9 +1,9 @@
-# ComfyUI Realtime LoRA Trainer
+# ComfyUI Realtime LoRA Toolkit
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://buymeacoffee.com/lorasandlenses)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Train LoRAs for **SDXL, SD 1.5, FLUX, Z-Image, Qwen Image, Qwen Image Edit, and Wan 2.2** directly inside ComfyUI. One unified interface across three training backends.
+**Train**, **analyze**, and **selectively load** LoRAs for **SDXL, SD 1.5, FLUX, Z-Image, Qwen Image, Qwen Image Edit, and Wan 2.2** directly inside ComfyUI. One unified interface across three training backends, plus powerful analysis and block-level loading tools.
 
 Capture a face, a style, or a subject from your reference images and apply it to new generations - all within the same workflow. No config files. No command line. Just connect images and go.
 
@@ -15,7 +15,7 @@ Capture a face, a style, or a subject from your reference images and apply it to
 | **Musubi Tuner** | Z-Image, Qwen Image, Qwen Image Edit, Wan 2.2 | Cutting-edge models, smaller LoRAs, excellent VRAM efficiency |
 | **AI-Toolkit** | FLUX.1-dev, Z-Image, Wan 2.2 alternative training pipeline |
 
-**7 architectures. 3 training backends. 8 trainer nodes.**
+**7 architectures. 3 training backends. 8 trainer nodes. 5 selective loaders. 1 analyzer.**
 
 ## Use Cases
 
@@ -112,6 +112,14 @@ Search for these in ComfyUI:
 - **Realtime LoRA Trainer (SD 1.5 - sd-scripts)** - Trains using sd-scripts (SD 1.5)
 - **Apply Trained LoRA** - Applies the trained LoRA to your model
 
+**Analysis & Selective Loading:**
+- **LoRA Loader + Analyzer** - Loads a LoRA and analyzes block-level impact (outputs analysis JSON for selective loaders)
+- **Selective LoRA Loader (SDXL)** - Load SDXL LoRAs with per-block toggles and strength sliders
+- **Selective LoRA Loader (Z-Image)** - Load Z-Image LoRAs with per-layer toggles (30 layers)
+- **Selective LoRA Loader (FLUX)** - Load FLUX LoRAs with per-block toggles (57 blocks: 19 double + 38 single)
+- **Selective LoRA Loader (Wan)** - Load Wan LoRAs with per-block toggles (40 blocks)
+- **Selective LoRA Loader (Qwen)** - Load Qwen LoRAs with per-block toggles (60 blocks)
+
 ## Getting Started
 
 There are critical example workflows with useful info included in the custom_nodes/comfyUI-Realtime-Lora folder. Open one in ComfyUI and:
@@ -139,6 +147,53 @@ There are critical example workflows with useful info included in the custom_nod
 - Automatic caching - identical inputs skip training and reuse the LoRA
 - VRAM presets for different GPU sizes
 - Settings are saved between sessions
+
+## LoRA Analysis & Selective Loading
+
+Beyond training, this toolkit includes tools for understanding and fine-tuning how LoRAs affect your generations.
+
+### LoRA Loader + Analyzer
+
+The analyzer loads any LoRA and shows you which blocks have the most impact. It calculates a "strength" score (0-100%) for each block based on the weight magnitudes in that block. High-impact blocks are where the LoRA learned the most - these are often the blocks responsible for the subject's face, style, or composition.
+
+**Outputs:**
+- `model` / `clip` - The model with LoRA applied
+- `analysis` - Human-readable text breakdown
+- `analysis_json` - JSON data for selective loaders (enables impact-colored checkboxes)
+- `lora_path` - Path to the loaded LoRA (can connect to selective loaders)
+
+### Selective LoRA Loaders
+
+Each architecture has its own selective loader with toggles and strength sliders for every block or layer. This lets you:
+
+- **Disable low-impact blocks** to reduce LoRA influence on parts of the image
+- **Focus on specific blocks** (e.g., face blocks, style blocks, composition blocks)
+- **Fine-tune strength per-block** instead of using a single global strength
+
+**Presets included:**
+- Default (all on at 1.0)
+- All Off
+- Half Strength
+- Architecture-specific presets (High Impact, Face Focus, Style Only, etc.)
+
+### Impact-Colored Checkboxes
+
+Connect the `analysis_json` output from the Analyzer to a Selective Loader's `analysis_json` input. The checkboxes will color-code by impact:
+
+- **Blue** = Low impact (0-30%)
+- **Cyan/Green** = Medium impact (30-60%)
+- **Yellow/Orange** = High impact (60-90%)
+- **Red** = Very high impact (90-100%)
+
+This makes it easy to see at a glance which blocks matter most for your LoRA.
+
+### Usage Notes
+
+- **Analyzer standalone**: The LoRA Loader + Analyzer works on its own as a drop-in replacement for ComfyUI's standard LoRA loader. The analysis outputs are optional - you can ignore them and just use the model/clip outputs.
+
+- **Path override**: When you connect a path to a Selective Loader's `lora_path` input, the dropdown selection is ignored. This lets you analyze one LoRA and selectively load it in one step.
+
+- **Trainer → Selective Loader**: The `lora_path` output from any trainer node is compatible with the Selective Loader's path input. Train a LoRA and immediately load it with per-block control - useful for testing which blocks matter for your freshly trained subject.
 
 ## Defaults (Z-Image example)
 
