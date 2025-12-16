@@ -476,7 +476,7 @@ TIP: Use 'LoRA Loader + Analyzer' first to see which layers matter for YOUR LoRA
 Late layers (20-29) usually have the most effect.
 Try disabling early layers (0-9) to reduce style bleed while keeping identity."""
 
-    def load_lora(self, model, clip, lora_name, strength, preset, other_weights, other_weights_str, lora_path_opt=None, analysis_json=None, **kwargs):
+    def load_lora(self, model, clip, lora_name, strength, preset, lora_path_opt=None, analysis_json=None, **kwargs):
         # Store analysis_json for UI callback
         self._analysis_json = analysis_json
         # Use preset or custom toggles
@@ -495,8 +495,8 @@ Try disabling early layers (0-9) to reduce style bleed while keeping identity.""
                 if kwargs.get(f"layer_{i}", True):
                     enabled_layers.add(i)
                     layer_strengths[i] = kwargs.get(f"layer_{i}_str", 1.0)
-            other_enabled = other_weights
-            other_str = other_weights_str
+            other_enabled = kwargs.get("other_weights", True)
+            other_str = kwargs.get("other_weights_str", 1.0)
             using_preset = None
 
         # Load LoRA - use optional path if provided, otherwise use dropdown selection
@@ -629,7 +629,7 @@ class FLUXSelectiveLoRALoader:
 TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA.
 Double blocks (0-18) typically have more impact than single blocks (0-37)."""
 
-    def load_lora(self, model, clip, lora_name, strength, preset, other_weights, other_weights_str, lora_path_opt=None, analysis_json=None, **kwargs):
+    def load_lora(self, model, clip, lora_name, strength, preset, lora_path_opt=None, analysis_json=None, **kwargs):
         # Store analysis_json for UI callback
         self._analysis_json = analysis_json
         # Use preset or custom toggles
@@ -654,8 +654,8 @@ Double blocks (0-18) typically have more impact than single blocks (0-37)."""
                 if kwargs.get(block_id, True):
                     enabled_blocks.add(block_id)
                     block_strengths[block_id] = kwargs.get(f"{block_id}_str", 1.0)
-            other_enabled = other_weights
-            other_str = other_weights_str
+            other_enabled = kwargs.get("other_weights", True)
+            other_str = kwargs.get("other_weights_str", 1.0)
             using_preset = None
 
         # Load LoRA - use optional path if provided, otherwise use dropdown selection
@@ -788,7 +788,7 @@ class WanSelectiveLoRALoader:
 
 TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA."""
 
-    def load_lora(self, model, clip, lora_name, strength, preset, other_weights, other_weights_str, lora_path_opt=None, analysis_json=None, **kwargs):
+    def load_lora(self, model, clip, lora_name, strength, preset, lora_path_opt=None, analysis_json=None, **kwargs):
         # Store analysis_json for UI callback
         self._analysis_json = analysis_json
         # Use preset or custom toggles
@@ -807,8 +807,8 @@ TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA
                 if kwargs.get(f"block_{i}", True):
                     enabled_blocks.add(i)
                     block_strengths[i] = kwargs.get(f"block_{i}_str", 1.0)
-            other_enabled = other_weights
-            other_str = other_weights_str
+            other_enabled = kwargs.get("other_weights", True)
+            other_str = kwargs.get("other_weights_str", 1.0)
             using_preset = None
 
         # Load LoRA - use optional path if provided, otherwise use dropdown selection
@@ -936,7 +936,7 @@ class QwenSelectiveLoRALoader:
 
 TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA."""
 
-    def load_lora(self, model, clip, lora_name, strength, preset, other_weights, other_weights_str, lora_path_opt=None, analysis_json=None, **kwargs):
+    def load_lora(self, model, clip, lora_name, strength, preset, lora_path_opt=None, analysis_json=None, **kwargs):
         # Store analysis_json for UI callback
         self._analysis_json = analysis_json
         # Use preset or custom toggles
@@ -955,8 +955,8 @@ TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA
                 if kwargs.get(f"block_{i}", True):
                     enabled_blocks.add(i)
                     block_strengths[i] = kwargs.get(f"block_{i}_str", 1.0)
-            other_enabled = other_weights
-            other_str = other_weights_str
+            other_enabled = kwargs.get("other_weights", True)
+            other_str = kwargs.get("other_weights_str", 1.0)
             using_preset = None
 
         # Load LoRA - use optional path if provided, otherwise use dropdown selection
