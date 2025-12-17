@@ -27,9 +27,15 @@ def _detect_architecture(keys):
     if any('transformer_blocks' in k and any(x in k for x in ['img_mlp', 'txt_mlp', 'img_mod', 'txt_mod']) for k in keys_lower):
         return 'QWEN_IMAGE'
 
-    # Check for Flux AI-Toolkit format (transformer.single_transformer_blocks / transformer.double_blocks)
-    # Must check BEFORE Z-Image since both have single_transformer_blocks
+    # Check for Flux formats - must check BEFORE Z-Image since both have single_transformer_blocks
+    # AI-Toolkit format: transformer.single_transformer_blocks / transformer.double_blocks
     if any('transformer.single_transformer_blocks' in k or 'transformer.double_blocks' in k for k in keys_lower):
+        return 'FLUX'
+    # AI-Toolkit alternate format: transformer.transformer_blocks (double blocks)
+    if any('transformer.transformer_blocks' in k and 'single_transformer_blocks' not in k for k in keys_lower):
+        return 'FLUX'
+    # Kohya/other format: lora_transformer_single_transformer_blocks / lora_transformer_double_blocks (underscores)
+    if any('transformer_single_transformer_blocks' in k or 'transformer_double_blocks' in k for k in keys_lower):
         return 'FLUX'
 
     # Check for Z-Image patterns:
@@ -109,17 +115,34 @@ def _extract_block_id(key: str, architecture: str) -> str:
         return f"block_{match.group(1)}" if match else 'other'
 
     elif architecture == 'FLUX':
-        # AI-Toolkit format: transformer.double_blocks.N or transformer.single_transformer_blocks.N
-        double = re.search(r'(?:transformer\.)?double_blocks?[._]?(\d+)', key_lower)
-        if double:
-            return f"double_{double.group(1)}"
-        # Check for single_transformer_blocks (AI-Toolkit) or single_blocks (other formats)
+        # FLUX has double blocks (19) and single blocks (38)
+        # Different trainers use different naming:
+        #   - Standard: double_blocks.N, single_blocks.N
+        #   - AI-Toolkit: transformer.transformer_blocks.N (double), transformer.single_transformer_blocks.N (single)
+        #   - Kohya/other: lora_transformer_single_transformer_blocks_N, lora_transformer_double_blocks_N
+
+        # Check single blocks FIRST (because "single_transformer_blocks" contains "transformer_blocks")
+        # Handles: single_transformer_blocks.N, single_transformer_blocks_N, transformer_single_transformer_blocks_N
         single = re.search(r'single_transformer_blocks[._]?(\d+)', key_lower)
         if single:
             return f"single_{single.group(1)}"
         single = re.search(r'single_blocks[._]?(\d+)', key_lower)
         if single:
             return f"single_{single.group(1)}"
+
+        # Double blocks - standard format
+        double = re.search(r'(?:transformer\.)?double_blocks?[._]?(\d+)', key_lower)
+        if double:
+            return f"double_{double.group(1)}"
+        # AI-Toolkit format: transformer.transformer_blocks.N (these are double blocks)
+        double = re.search(r'transformer\.transformer_blocks[._]?(\d+)', key_lower)
+        if double:
+            return f"double_{double.group(1)}"
+        # Kohya/other format: transformer_double_blocks_N (underscores, these are double blocks)
+        double = re.search(r'transformer_double_blocks[._]?(\d+)', key_lower)
+        if double:
+            return f"double_{double.group(1)}"
+
         return 'other'
 
     elif architecture in ['SDXL', 'SD15']:

@@ -23,10 +23,21 @@ def _detect_architecture(keys):
         return 'QWEN_IMAGE'
     if any('diffusion_model.layers.' in k and ('attention' in k or 'adaln' in k.lower()) for k in keys_lower):
         return 'ZIMAGE'
-    if any('single_transformer_blocks' in k for k in keys_lower):
+    # Musubi Tuner Z-Image format (lora_unet_layers_N_attention_...)
+    if any('lora_unet_layers_' in k and 'attention' in k for k in keys_lower):
         return 'ZIMAGE'
+    # FLUX detection - check AI-Toolkit format BEFORE Z-Image single_transformer_blocks check
+    # AI-Toolkit uses: transformer.transformer_blocks.N (double) and transformer.single_transformer_blocks.N (single)
+    if any('transformer.single_transformer_blocks' in k or 'transformer.transformer_blocks' in k for k in keys_lower):
+        return 'FLUX'
+    # Kohya/other format: lora_transformer_single_transformer_blocks / lora_transformer_double_blocks (underscores)
+    if any('transformer_single_transformer_blocks' in k or 'transformer_double_blocks' in k for k in keys_lower):
+        return 'FLUX'
     if any('double_blocks' in k or 'single_blocks' in k for k in keys_lower):
         return 'FLUX'
+    # Z-Image old format (single_transformer_blocks WITHOUT transformer. prefix)
+    if any('single_transformer_blocks' in k and 'transformer.single_transformer_blocks' not in k for k in keys_lower):
+        return 'ZIMAGE'
     if any(('blocks.' in k or 'blocks_' in k) and any(x in k for x in ['self_attn', 'cross_attn', 'ffn'])
            for k in keys_lower):
         return 'WAN'
@@ -90,15 +101,33 @@ def _extract_block_id_flux(key: str) -> str:
     """Extract block ID for FLUX architecture."""
     key_lower = key.lower()
 
-    # Double blocks (double_blocks.N or double_blocks_N)
-    double = re.search(r'double_blocks[._]?(\d+)', key_lower)
-    if double:
-        return f"double_{double.group(1)}"
+    # FLUX has double blocks (19) and single blocks (38)
+    # Different trainers use different naming:
+    #   - Standard: double_blocks.N, single_blocks.N
+    #   - AI-Toolkit: transformer.transformer_blocks.N (double), transformer.single_transformer_blocks.N (single)
+    #   - Kohya/other: lora_transformer_single_transformer_blocks_N, lora_transformer_double_blocks_N
 
-    # Single blocks (single_blocks.N or single_blocks_N)
+    # Check single blocks FIRST (because "single_transformer_blocks" contains "transformer_blocks")
+    # Handles: single_transformer_blocks.N, single_transformer_blocks_N, transformer_single_transformer_blocks_N
+    single = re.search(r'single_transformer_blocks[._]?(\d+)', key_lower)
+    if single:
+        return f"single_{single.group(1)}"
     single = re.search(r'single_blocks[._]?(\d+)', key_lower)
     if single:
         return f"single_{single.group(1)}"
+
+    # Double blocks - standard format
+    double = re.search(r'(?:transformer\.)?double_blocks?[._]?(\d+)', key_lower)
+    if double:
+        return f"double_{double.group(1)}"
+    # AI-Toolkit format: transformer.transformer_blocks.N (these are double blocks)
+    double = re.search(r'transformer\.transformer_blocks[._]?(\d+)', key_lower)
+    if double:
+        return f"double_{double.group(1)}"
+    # Kohya/other format: transformer_double_blocks_N (underscores, these are double blocks)
+    double = re.search(r'transformer_double_blocks[._]?(\d+)', key_lower)
+    if double:
+        return f"double_{double.group(1)}"
 
     return 'other'
 
