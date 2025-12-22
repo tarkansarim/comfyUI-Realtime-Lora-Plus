@@ -12,6 +12,8 @@ import hashlib
 import tempfile
 import shutil
 import subprocess
+import socket
+import threading
 from datetime import datetime
 import numpy as np
 from PIL import Image
@@ -161,6 +163,56 @@ _load_musubi_config()
 _load_musubi_cache()
 
 
+def _parse_device_indexes(device_indexes_str):
+    """
+    Parse comma-separated device indexes string.
+    
+    Args:
+        device_indexes_str: Comma-separated GPU IDs (e.g., "0,1" or "0,1,2")
+    
+    Returns:
+        tuple: (list of GPU IDs, number of GPUs)
+    
+    Raises:
+        ValueError: If format is invalid
+    """
+    if not device_indexes_str or not device_indexes_str.strip():
+        return [], 0
+    
+    try:
+        # Split by comma and strip whitespace
+        device_ids = [int(x.strip()) for x in device_indexes_str.split(',') if x.strip()]
+        
+        # Validate all are non-negative integers
+        if any(d < 0 for d in device_ids):
+            raise ValueError("Device indexes must be non-negative integers")
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_ids = []
+        for d in device_ids:
+            if d not in seen:
+                seen.add(d)
+                unique_ids.append(d)
+        
+        return unique_ids, len(unique_ids)
+    except ValueError as e:
+        if "invalid literal" in str(e):
+            raise ValueError(f"Invalid device_indexes format: '{device_indexes_str}'. Expected comma-separated integers (e.g., '0,1' or '0,1,2')")
+        raise
+
+
+def _get_free_port(default_port: int = 29500) -> int:
+    """Return a free localhost TCP port, or default_port if allocation fails."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(("127.0.0.1", 0))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            return int(sock.getsockname()[1])
+    except Exception:
+        return int(default_port)
+
+
 class MusubiZImageLoraTrainer:
     """
     Trains a Z-Image LoRA from one or more images using Musubi Tuner.
@@ -268,6 +320,14 @@ class MusubiZImageLoraTrainer:
                     "default": saved.get('custom_python_exe', ""),
                     "tooltip": "Advanced: Optionally enter the full path to a custom python.exe (e.g. C:\\my-venv\\Scripts\\python.exe). If empty, uses the venv inside musubi_path. The musubi_path field is still required for locating training scripts."
                 }),
+                "enable_multi_gpu": ("BOOLEAN", {
+                    "default": saved.get('enable_multi_gpu', False),
+                    "tooltip": "Enable multi-GPU training. When enabled, uses device_indexes to select GPUs."
+                }),
+                "device_indexes": ("STRING", {
+                    "default": saved.get('device_indexes', ""),
+                    "tooltip": "Comma-separated GPU device IDs (e.g., '0,1' or '0,1,2'). Only used when enable_multi_gpu is True."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -304,6 +364,8 @@ class MusubiZImageLoraTrainer:
         keep_lora=True,
         output_name="MyLora",
         custom_python_exe="",
+        enable_multi_gpu=False,
+        device_indexes="",
         image_1=None,
         **kwargs
     ):
@@ -378,6 +440,20 @@ class MusubiZImageLoraTrainer:
         print(f"[Musubi Z-Image] VAE: {vae_model}")
         print(f"[Musubi Z-Image] Text Encoder: {text_encoder}")
 
+        # Parse and validate device indexes for multi-GPU
+        device_ids = []
+        num_gpus = 0
+        if enable_multi_gpu:
+            if not device_indexes or not device_indexes.strip():
+                raise ValueError("device_indexes must be provided when enable_multi_gpu is True. Example: '0,1' or '0,1,2'")
+            try:
+                device_ids, num_gpus = _parse_device_indexes(device_indexes)
+                if num_gpus == 0:
+                    raise ValueError("device_indexes must contain at least one GPU ID when enable_multi_gpu is True")
+                print(f"[Musubi Z-Image] Multi-GPU enabled: Using GPUs {device_ids}")
+            except ValueError as e:
+                raise ValueError(f"Invalid device_indexes: {e}")
+
         # Get VRAM preset settings
         preset = MUSUBI_ZIMAGE_VRAM_PRESETS.get(vram_mode, MUSUBI_ZIMAGE_VRAM_PRESETS["Low (768px)"])
         print(f"[Musubi Z-Image] Using VRAM mode: {vram_mode}")
@@ -415,6 +491,8 @@ class MusubiZImageLoraTrainer:
             'keep_lora': keep_lora,
             'output_name': output_name,
             'custom_python_exe': custom_python_exe,
+            'enable_multi_gpu': enable_multi_gpu,
+            'device_indexes': device_indexes,
         }
         _save_musubi_config()
 
@@ -507,6 +585,20 @@ class MusubiZImageLoraTrainer:
 
             env = os.environ.copy()
             env['PYTHONIOENCODING'] = 'utf-8'
+            
+            # Set CUDA_VISIBLE_DEVICES for multi-GPU support
+            if enable_multi_gpu and device_ids:
+                cuda_devices = ','.join(str(d) for d in device_ids)
+                env['CUDA_VISIBLE_DEVICES'] = cuda_devices
+                print(f"[Musubi Z-Image] Setting CUDA_VISIBLE_DEVICES={cuda_devices}")
+                
+                if sys.platform == 'win32':
+                    # IMPORTANT: On Windows, torchrun/accelerate multi-GPU uses torch.distributed.elastic
+                    # which can try to create TCPStore with libuv and fail (PyTorch is built without libuv).
+                    # We avoid that by launching ranks ourselves (see training launch section below).
+                    env['USE_LIBUV'] = '0'
+                    env['TORCH_DISTRIBUTED_BACKEND'] = 'gloo'
+                    print(f"[Musubi Z-Image] Windows multi-GPU: USE_LIBUV=0, TORCH_DISTRIBUTED_BACKEND=gloo")
 
             # Use custom python exe if provided, otherwise detect from musubi_path
             if custom_python_exe and custom_python_exe.strip():
@@ -597,11 +689,24 @@ class MusubiZImageLoraTrainer:
             print(f"[Musubi Z-Image] Text encoder outputs cached.")
 
             # Build training command
+            # Default launcher: accelerate (single process on Windows; multi-GPU on non-Windows)
+            # NOTE: On Windows multi-GPU we do NOT use accelerate/torchrun because it routes through
+            # torch.distributed.elastic static_tcp_rendezvous which can request libuv and fail.
             cmd = [
-                accelerate_path,
-                "launch",
+                python_path,
+                "-m",
+                "accelerate.commands.launch",
                 "--num_cpu_threads_per_process=1",
                 f"--mixed_precision={preset['mixed_precision']}",
+            ]
+
+            # Add multi-GPU flags only on non-Windows (Windows multi-GPU is launched manually below)
+            if enable_multi_gpu and num_gpus > 0 and sys.platform != 'win32':
+                cmd.append(f"--num_processes={num_gpus}")
+                cmd.append("--multi_gpu")
+                print(f"[Musubi Z-Image] Multi-GPU training: {num_gpus} processes on GPUs {device_ids}")
+            
+            cmd.extend([
                 train_script,
                 f"--dit={dit_path}",
                 f"--vae={vae_path}",
@@ -623,7 +728,7 @@ class MusubiZImageLoraTrainer:
                 f"--output_dir={output_folder}",
                 f"--output_name={run_name}",
                 "--seed=42",
-            ]
+            ])
 
             # Add memory optimization flags
             if preset['gradient_checkpointing']:
@@ -643,28 +748,145 @@ class MusubiZImageLoraTrainer:
             print(f"[Musubi Z-Image] Images: {num_images}, Steps: {training_steps}, LR: {learning_rate}, Rank: {lora_rank}")
 
             # Run training
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                cwd=musubi_path,
-                startupinfo=startupinfo,
-                env=env,
-            )
+            if sys.platform == 'win32' and enable_multi_gpu and num_gpus > 1:
+                # Windows multi-GPU launcher (OneTrainer-style): spawn ranks ourselves.
+                # This avoids torch.distributed.elastic rendezvous (static_tcp_rendezvous) which can
+                # request libuv and fail on Windows PyTorch builds.
+                master_addr = "127.0.0.1"
+                master_port = _get_free_port()
+                world_size = num_gpus
 
-            # Stream output
-            for line in process.stdout:
-                line = line.rstrip()
-                if line:
-                    print(f"[musubi-tuner] {line}")
+                print(f"[Musubi Z-Image] Windows multi-GPU launcher: {world_size} ranks, master={master_addr}:{master_port}")
 
-            process.wait()
+                # Per-rank command is the *training script directly* (no accelerate/torchrun)
+                # and we set the standard env:// variables so accelerate inside the script can
+                # initialize torch.distributed with backend=gloo.
+                base_cmd = [
+                    python_path,
+                    train_script,
+                    f"--dit={dit_path}",
+                    f"--vae={vae_path}",
+                    f"--text_encoder={text_encoder_path}",
+                    f"--dataset_config={config_path}",
+                    "--sdpa",
+                    f"--mixed_precision={preset['mixed_precision']}",
+                    "--timestep_sampling=shift",
+                    "--weighting_scheme=none",
+                    "--discrete_flow_shift=2.0",
+                    f"--optimizer_type={preset['optimizer']}",
+                    f"--learning_rate={learning_rate}",
+                    f"--network_module=networks.lora_zimage",
+                    f"--network_dim={lora_rank}",
+                    f"--network_alpha={lora_rank}",
+                    f"--max_train_steps={training_steps}",
+                    "--max_data_loader_n_workers=2",
+                    "--persistent_data_loader_workers",
+                    f"--output_dir={output_folder}",
+                    f"--output_name={run_name}",
+                    "--seed=42",
+                ]
 
-            if process.returncode != 0:
-                raise RuntimeError(f"Musubi Tuner training failed with code {process.returncode}")
+                # Mirror memory optimization flags
+                if preset['gradient_checkpointing']:
+                    base_cmd.append("--gradient_checkpointing")
+                if preset['fp8_scaled']:
+                    base_cmd.append("--fp8_base")
+                    base_cmd.append("--fp8_scaled")
+                if preset['fp8_llm']:
+                    base_cmd.append("--fp8_llm")
+                if preset.get('blocks_to_swap', 0) > 0:
+                    base_cmd.append(f"--blocks_to_swap={preset['blocks_to_swap']}")
+
+                procs = []
+                threads = []
+                proc_exit_codes = [None] * world_size
+
+                def _stream(rank: int, p: subprocess.Popen):
+                    try:
+                        for line in p.stdout:
+                            line = line.rstrip()
+                            if line:
+                                print(f"[musubi-tuner][rank {rank}] {line}")
+                    except Exception as e:
+                        print(f"[Musubi Z-Image] Warning: output stream error (rank {rank}): {e}")
+
+                try:
+                    for local_rank in range(world_size):
+                        rank_env = env.copy()
+                        rank_env["MASTER_ADDR"] = master_addr
+                        rank_env["MASTER_PORT"] = str(master_port)
+                        rank_env["WORLD_SIZE"] = str(world_size)
+                        rank_env["RANK"] = str(local_rank)
+                        rank_env["LOCAL_RANK"] = str(local_rank)
+                        rank_env["LOCAL_WORLD_SIZE"] = str(world_size)
+                        # Ensure Windows backend + libuv disable are set for each rank.
+                        rank_env["TORCH_DISTRIBUTED_BACKEND"] = "gloo"
+                        rank_env["USE_LIBUV"] = "0"
+
+                        p = subprocess.Popen(
+                            base_cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            text=True,
+                            encoding="utf-8",
+                            errors="replace",
+                            cwd=musubi_path,
+                            startupinfo=startupinfo,
+                            env=rank_env,
+                        )
+                        procs.append(p)
+                        t = threading.Thread(target=_stream, args=(local_rank, p), daemon=True)
+                        threads.append(t)
+                        t.start()
+
+                    # Wait for all ranks
+                    for i, p in enumerate(procs):
+                        proc_exit_codes[i] = p.wait()
+
+                    # If any rank failed, terminate remaining (if any) and raise
+                    failed = [(i, c) for i, c in enumerate(proc_exit_codes) if c not in (0, None)]
+                    if failed:
+                        for p in procs:
+                            if p.poll() is None:
+                                try:
+                                    p.terminate()
+                                except Exception:
+                                    pass
+                        raise RuntimeError(f"Musubi Tuner multi-GPU training failed. Rank exit codes: {proc_exit_codes}")
+
+                finally:
+                    # Best-effort cleanup of any still-running processes
+                    for p in procs:
+                        if p.poll() is None:
+                            try:
+                                p.terminate()
+                            except Exception:
+                                pass
+
+            else:
+                # Default launcher (single process, or non-Windows)
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace',
+                    cwd=musubi_path,
+                    startupinfo=startupinfo,
+                    env=env,
+                )
+
+                # Stream output
+                for line in process.stdout:
+                    line = line.rstrip()
+                    if line:
+                        print(f"[musubi-tuner] {line}")
+
+                process.wait()
+
+                if process.returncode != 0:
+                    raise RuntimeError(f"Musubi Tuner training failed with code {process.returncode}")
 
             print(f"[Musubi Z-Image] Training completed!")
 
