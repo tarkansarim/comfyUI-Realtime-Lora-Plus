@@ -822,6 +822,9 @@ class MusubiZImageLoraTrainer:
                         # Ensure Windows backend + libuv disable are set for each rank.
                         rank_env["TORCH_DISTRIBUTED_BACKEND"] = "gloo"
                         rank_env["USE_LIBUV"] = "0"
+                        # Force TCP transport for Gloo on Windows. Some PyTorch builds can error with:
+                        # "makeDeviceForHostname(): unsupported gloo device" if the default transport is unsupported.
+                        rank_env["GLOO_DEVICE_TRANSPORT"] = "tcp"
 
                         p = subprocess.Popen(
                             base_cmd,
