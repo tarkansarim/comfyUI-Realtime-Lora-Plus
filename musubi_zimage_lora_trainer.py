@@ -511,7 +511,7 @@ class MusubiZImageLoraTrainer:
                 "training_steps": ("INT", {
                     "default": saved.get('training_steps', 400),
                     "min": 10,
-                    "max": 5000,
+                    "max": 1000000,
                     "step": 10,
                     "tooltip": "Number of training steps. 400 is a good starting point."
                 }),
