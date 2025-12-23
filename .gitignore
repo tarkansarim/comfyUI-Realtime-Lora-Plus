@@ -1,0 +1,16 @@
+﻿# Local node config/cache (never commit)
+.musubi_*_config.json
+.musubi_*_lora_cache.json
+.musubi_*.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Training outputs
+output/
+outputs/
