@@ -738,6 +738,17 @@ class MusubiZImageLoraTrainer:
                     "step": 1,
                     "tooltip": "How many times each item is repeated per epoch (dataset_config num_repeats)."
                 }),
+                "enable_tensorboard": ("BOOLEAN", {
+                    "default": saved.get('enable_tensorboard', False),
+                    "tooltip": "Enable TensorBoard logging. Logs will be saved to a 'logs' folder inside your LoRA output folder. Run 'tensorboard --logdir <path>' to view."
+                }),
+                "tensorboard_port": ("INT", {
+                    "default": saved.get('tensorboard_port', 6006),
+                    "min": 1024,
+                    "max": 65535,
+                    "step": 1,
+                    "tooltip": "Port for TensorBoard server (default: 6006). Use this when running 'tensorboard --logdir <path> --port <port>'."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -787,6 +798,8 @@ class MusubiZImageLoraTrainer:
         batch_size=1,
         gradient_accumulation_steps=1,
         enable_bucket=True,
+        enable_tensorboard=False,
+        tensorboard_port=6006,
         bucket_no_upscale=False,
         num_repeats=10,
         image_1=None,
@@ -1501,6 +1514,15 @@ class MusubiZImageLoraTrainer:
 
         if preset.get('blocks_to_swap', 0) > 0:
             train_args.append(f"--blocks_to_swap={preset['blocks_to_swap']}")
+
+        # TensorBoard logging
+        if enable_tensorboard:
+            logging_dir = os.path.join(lora_folder, "logs")
+            os.makedirs(logging_dir, exist_ok=True)
+            train_args.append(f"--logging_dir={logging_dir}")
+            train_args.append("--log_with=tensorboard")
+            print(f"[Musubi Z-Image] TensorBoard logging enabled: {logging_dir}")
+            print(f"[Musubi Z-Image] Run 'tensorboard --logdir \"{logging_dir}\" --port {tensorboard_port}' to view training progress")
 
         # Build training command
         cmd = [
