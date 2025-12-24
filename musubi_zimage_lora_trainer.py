@@ -27,6 +27,7 @@ import comfy.model_management
 
 from .musubi_zimage_config_template import (
     generate_dataset_config,
+    generate_multi_dataset_config,
     save_config,
     MUSUBI_ZIMAGE_VRAM_PRESETS,
 )
@@ -207,6 +208,19 @@ def _validate_lora_name(output_name: str) -> str:
             raise ValueError(f"output_name '{name}' is a reserved Windows name.")
 
     return name
+
+
+def _parse_folder_repeats(folder_name: str, default_repeats: int) -> int:
+    """Extract repeat count from folder name prefix (e.g., '10_dogs' -> 10).
+    
+    If the folder name starts with a number, that number is used as the repeat count.
+    Otherwise, the default_repeats value is used.
+    """
+    import re
+    match = re.match(r'^(\d+)', folder_name)
+    if match:
+        return int(match.group(1))
+    return default_repeats
 
 
 def _find_latest_state_dir(lora_folder: str) -> str:
@@ -822,31 +836,89 @@ class MusubiZImageLoraTrainer:
         use_folder_path = False
         folder_images = []
         folder_captions = []
+        # Multi-concept support: list of concept dicts with folder_name, images, captions, num_repeats
+        folder_concepts = []
+        use_multi_concept = False
 
         if images_path and images_path.strip():
             images_path = os.path.expanduser(images_path.strip())
             if os.path.isdir(images_path):
-                # Find all image files in the folder
                 image_extensions = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
-                for filename in sorted(os.listdir(images_path)):
-                    if filename.lower().endswith(image_extensions):
-                        img_path = os.path.join(images_path, filename)
-                        folder_images.append(img_path)
-
-                        # Look for matching caption file
-                        base_name = os.path.splitext(filename)[0]
-                        caption_file = os.path.join(images_path, f"{base_name}.txt")
-                        if os.path.exists(caption_file):
-                            with open(caption_file, 'r', encoding='utf-8') as f:
-                                folder_captions.append(f.read().strip())
-                        else:
-                            folder_captions.append(caption)  # Use default caption
-
-                if folder_images:
+                
+                # First, check if there are subfolders with images (multi-concept mode)
+                subfolders = []
+                for entry in sorted(os.listdir(images_path)):
+                    subfolder_path = os.path.join(images_path, entry)
+                    if os.path.isdir(subfolder_path):
+                        # Check if this subfolder contains images
+                        subfolder_images = [f for f in os.listdir(subfolder_path) 
+                                          if f.lower().endswith(image_extensions)]
+                        if subfolder_images:
+                            subfolders.append(entry)
+                
+                if subfolders:
+                    # Multi-concept mode: each subfolder is a separate concept
+                    use_multi_concept = True
                     use_folder_path = True
-                    print(f"[Musubi Z-Image] Using {len(folder_images)} images from folder: {images_path}")
+                    total_images = 0
+                    
+                    for subfolder_name in subfolders:
+                        subfolder_path = os.path.join(images_path, subfolder_name)
+                        concept_images = []
+                        concept_captions = []
+                        concept_repeats = _parse_folder_repeats(subfolder_name, num_repeats)
+                        
+                        for filename in sorted(os.listdir(subfolder_path)):
+                            if filename.lower().endswith(image_extensions):
+                                img_path = os.path.join(subfolder_path, filename)
+                                concept_images.append(img_path)
+                                
+                                # Look for matching caption file
+                                base_name = os.path.splitext(filename)[0]
+                                caption_file = os.path.join(subfolder_path, f"{base_name}.txt")
+                                if os.path.exists(caption_file):
+                                    with open(caption_file, 'r', encoding='utf-8') as f:
+                                        concept_captions.append(f.read().strip())
+                                else:
+                                    concept_captions.append(caption)  # Use default caption
+                        
+                        if concept_images:
+                            folder_concepts.append({
+                                'folder_name': subfolder_name,
+                                'images': concept_images,
+                                'captions': concept_captions,
+                                'num_repeats': concept_repeats,
+                            })
+                            total_images += len(concept_images)
+                            print(f"[Musubi Z-Image] Concept '{subfolder_name}': {len(concept_images)} images, {concept_repeats} repeats")
+                    
+                    # Also collect flat lists for compatibility with existing code paths
+                    for concept in folder_concepts:
+                        folder_images.extend(concept['images'])
+                        folder_captions.extend(concept['captions'])
+                    
+                    print(f"[Musubi Z-Image] Multi-concept mode: {len(folder_concepts)} concepts, {total_images} total images")
                 else:
-                    print(f"[Musubi Z-Image] No images found in folder: {images_path}, falling back to inputs")
+                    # Single-folder mode: find all image files directly in the folder
+                    for filename in sorted(os.listdir(images_path)):
+                        if filename.lower().endswith(image_extensions):
+                            img_path = os.path.join(images_path, filename)
+                            folder_images.append(img_path)
+
+                            # Look for matching caption file
+                            base_name = os.path.splitext(filename)[0]
+                            caption_file = os.path.join(images_path, f"{base_name}.txt")
+                            if os.path.exists(caption_file):
+                                with open(caption_file, 'r', encoding='utf-8') as f:
+                                    folder_captions.append(f.read().strip())
+                            else:
+                                folder_captions.append(caption)  # Use default caption
+
+                    if folder_images:
+                        use_folder_path = True
+                        print(f"[Musubi Z-Image] Using {len(folder_images)} images from folder: {images_path}")
+                    else:
+                        print(f"[Musubi Z-Image] No images found in folder: {images_path}, falling back to inputs")
             else:
                 print(f"[Musubi Z-Image] Invalid folder path: {images_path}, falling back to inputs")
 
@@ -1018,35 +1090,71 @@ class MusubiZImageLoraTrainer:
                     config_text = f.read()
                 # Check if config uses absolute paths that don't exist
                 # Old configs have absolute paths like "E:/old-path/output/..." 
-                # New configs use relative paths like "./dataset"
+                # New configs use relative paths like "./dataset" or "./output/..."
                 if 'image_directory = "./' not in config_text and 'image_directory = ".' not in config_text:
-                    # Config uses absolute paths - check if they're valid
+                    # Config uses absolute paths - check if any are invalid
+                    # This handles both single-dataset and multi-dataset configs
                     import re as _re
-                    img_dir_match = _re.search(r'image_directory\s*=\s*"([^"]+)"', config_text)
-                    if img_dir_match:
-                        stored_img_dir = img_dir_match.group(1).replace('/', os.sep)
+                    img_dir_matches = _re.findall(r'image_directory\s*=\s*"([^"]+)"', config_text)
+                    for stored_path in img_dir_matches:
+                        stored_img_dir = stored_path.replace('/', os.sep)
                         if not os.path.isdir(stored_img_dir):
                             print(f"[Musubi Z-Image] Config has stale absolute paths (folder was likely renamed)")
-                            print(f"[Musubi Z-Image] Stored: {stored_img_dir}")
-                            print(f"[Musubi Z-Image] Current: {dataset_dir}")
+                            print(f"[Musubi Z-Image] Stale path: {stored_img_dir}")
                             needs_config_refresh = True
+                            break
             except Exception:
                 pass
         
         if needs_config_refresh and not needs_dataset_setup:
             # Regenerate config with current relative paths (preserves existing cache)
+            # Need to detect if this is a multi-concept or single-concept setup
             print(f"[Musubi Z-Image] Regenerating config with relative paths for portability...")
-            config_content = generate_dataset_config(
-                image_folder=dataset_dir,
-                resolution=preset['resolution'],
-                batch_size=batch_size,
-                enable_bucket=enable_bucket,
-                bucket_no_upscale=bucket_no_upscale,
-                num_repeats=num_repeats,
-                cache_directory=cache_dir,
-                use_relative_paths=True,
-                subprocess_cwd=musubi_path,
-            )
+            
+            # Check for subdirectories in the dataset folder (multi-concept indicator)
+            subdirs = [d for d in os.listdir(dataset_dir) if os.path.isdir(os.path.join(dataset_dir, d))]
+            image_extensions = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
+            concept_subdirs = []
+            for subdir in subdirs:
+                subdir_path = os.path.join(dataset_dir, subdir)
+                has_images = any(f.lower().endswith(image_extensions) for f in os.listdir(subdir_path))
+                if has_images:
+                    concept_subdirs.append(subdir)
+            
+            if concept_subdirs:
+                # Multi-concept: regenerate with multiple datasets
+                dataset_entries = []
+                for subdir in concept_subdirs:
+                    concept_dataset_dir = os.path.join(dataset_dir, subdir)
+                    concept_cache_dir = os.path.join(cache_dir, subdir)
+                    concept_repeats = _parse_folder_repeats(subdir, num_repeats)
+                    dataset_entries.append({
+                        'image_folder': concept_dataset_dir,
+                        'cache_directory': concept_cache_dir,
+                        'num_repeats': concept_repeats,
+                    })
+                config_content = generate_multi_dataset_config(
+                    datasets=dataset_entries,
+                    resolution=preset['resolution'],
+                    batch_size=batch_size,
+                    enable_bucket=enable_bucket,
+                    bucket_no_upscale=bucket_no_upscale,
+                    use_relative_paths=True,
+                    subprocess_cwd=musubi_path,
+                )
+            else:
+                # Single-concept: regenerate with single dataset
+                config_content = generate_dataset_config(
+                    image_folder=dataset_dir,
+                    resolution=preset['resolution'],
+                    batch_size=batch_size,
+                    enable_bucket=enable_bucket,
+                    bucket_no_upscale=bucket_no_upscale,
+                    num_repeats=num_repeats,
+                    cache_directory=cache_dir,
+                    use_relative_paths=True,
+                    subprocess_cwd=musubi_path,
+                )
             save_config(config_content, config_path)
             print(f"[Musubi Z-Image] Config refreshed: {config_path}")
         
@@ -1065,8 +1173,47 @@ class MusubiZImageLoraTrainer:
                     shutil.rmtree(path)
 
             # Save images with captions
-            if use_folder_path:
-                # Copy images from folder and create caption files
+            if use_multi_concept and folder_concepts:
+                # Multi-concept mode: create subdirectories for each concept
+                dataset_entries = []  # For generating multi-dataset config
+                
+                for concept in folder_concepts:
+                    concept_name = concept['folder_name']
+                    concept_dataset_dir = os.path.join(dataset_dir, concept_name)
+                    concept_cache_dir = os.path.join(cache_dir, concept_name)
+                    os.makedirs(concept_dataset_dir, exist_ok=True)
+                    
+                    # Copy images and captions for this concept
+                    for idx, (src_path, cap) in enumerate(zip(concept['images'], concept['captions'])):
+                        ext = os.path.splitext(src_path)[1]
+                        dest_path = os.path.join(concept_dataset_dir, f"image_{idx+1:03d}{ext}")
+                        shutil.copy2(src_path, dest_path)
+                        
+                        caption_path = os.path.join(concept_dataset_dir, f"image_{idx+1:03d}.txt")
+                        with open(caption_path, 'w', encoding='utf-8') as f:
+                            f.write(cap)
+                    
+                    dataset_entries.append({
+                        'image_folder': concept_dataset_dir,
+                        'cache_directory': concept_cache_dir,
+                        'num_repeats': concept['num_repeats'],
+                    })
+                    print(f"[Musubi Z-Image] Saved {len(concept['images'])} images to {concept_dataset_dir}")
+                
+                print(f"[Musubi Z-Image] Multi-concept: {len(folder_concepts)} concepts, {num_images} total images")
+                
+                # Generate multi-dataset config
+                config_content = generate_multi_dataset_config(
+                    datasets=dataset_entries,
+                    resolution=preset['resolution'],
+                    batch_size=batch_size,
+                    enable_bucket=enable_bucket,
+                    bucket_no_upscale=bucket_no_upscale,
+                    use_relative_paths=True,
+                    subprocess_cwd=musubi_path,
+                )
+            elif use_folder_path:
+                # Single-folder mode: copy images from folder and create caption files
                 for idx, (src_path, cap) in enumerate(zip(folder_images, folder_captions)):
                     ext = os.path.splitext(src_path)[1]
                     dest_path = os.path.join(dataset_dir, f"image_{idx+1:03d}{ext}")
@@ -1075,6 +1222,21 @@ class MusubiZImageLoraTrainer:
                     caption_path = os.path.join(dataset_dir, f"image_{idx+1:03d}.txt")
                     with open(caption_path, 'w', encoding='utf-8') as f:
                         f.write(cap)
+                
+                print(f"[Musubi Z-Image] Saved {num_images} images to {dataset_dir}")
+                
+                # Generate single-dataset config
+                config_content = generate_dataset_config(
+                    image_folder=dataset_dir,
+                    resolution=preset['resolution'],
+                    batch_size=batch_size,
+                    enable_bucket=enable_bucket,
+                    bucket_no_upscale=bucket_no_upscale,
+                    num_repeats=num_repeats,
+                    cache_directory=cache_dir,
+                    use_relative_paths=True,
+                    subprocess_cwd=musubi_path,
+                )
             else:
                 # Save tensor images
                 for idx, img_tensor in enumerate(all_images):
@@ -1089,20 +1251,20 @@ class MusubiZImageLoraTrainer:
                     with open(caption_path, 'w', encoding='utf-8') as f:
                         f.write(all_captions[idx])
 
-            print(f"[Musubi Z-Image] Saved {num_images} images to {dataset_dir}")
-
-            # Generate dataset config (use relative paths for portability across folder renames)
-            config_content = generate_dataset_config(
-                image_folder=dataset_dir,
-                resolution=preset['resolution'],
-                batch_size=batch_size,
-                enable_bucket=enable_bucket,
-                bucket_no_upscale=bucket_no_upscale,
-                num_repeats=num_repeats,
-                cache_directory=cache_dir,
-                use_relative_paths=True,
-                subprocess_cwd=musubi_path,
-            )
+                print(f"[Musubi Z-Image] Saved {num_images} images to {dataset_dir}")
+                
+                # Generate single-dataset config
+                config_content = generate_dataset_config(
+                    image_folder=dataset_dir,
+                    resolution=preset['resolution'],
+                    batch_size=batch_size,
+                    enable_bucket=enable_bucket,
+                    bucket_no_upscale=bucket_no_upscale,
+                    num_repeats=num_repeats,
+                    cache_directory=cache_dir,
+                    use_relative_paths=True,
+                    subprocess_cwd=musubi_path,
+                )
 
             save_config(config_content, config_path)
             print(f"[Musubi Z-Image] Dataset config saved to {config_path}")
