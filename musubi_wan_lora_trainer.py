@@ -12,11 +12,16 @@ import hashlib
 import tempfile
 import shutil
 import subprocess
+import threading
+import time
+import signal
+import queue
 from datetime import datetime
 import numpy as np
 from PIL import Image
 
 import folder_paths
+import comfy.model_management
 
 from .musubi_wan_config_template import (
     generate_dataset_config,
@@ -161,6 +166,134 @@ def _get_model_path(name, folder_type):
 _load_musubi_wan_config()
 _load_musubi_wan_cache()
 
+
+def _throw_if_comfyui_interrupted():
+    """Raise ComfyUI's InterruptProcessingException if the user pressed Cancel."""
+    comfy.model_management.throw_exception_if_processing_interrupted()
+
+
+def _terminate_process_tree(proc: subprocess.Popen):
+    """
+    Terminate a subprocess and its children.
+
+    We intentionally kill only the specific PID tree we started (never global python kills).
+    """
+    if proc is None:
+        return
+    try:
+        if proc.poll() is not None:
+            return
+    except Exception:
+        pass
+
+    if sys.platform == "win32":
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except Exception:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+    else:
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except Exception:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+
+
+def _popen_with_process_group(*popen_args, **popen_kwargs) -> subprocess.Popen:
+    """Start a subprocess in its own process group/session so we can terminate it reliably."""
+    if sys.platform == "win32":
+        popen_kwargs["creationflags"] = popen_kwargs.get("creationflags", 0) | subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_kwargs["start_new_session"] = True
+    return subprocess.Popen(*popen_args, **popen_kwargs)
+
+
+def _run_subprocess_with_cancel(cmd, *, cwd, env, startupinfo, prefix: str):
+    """
+    Run a subprocess while:
+    - streaming its output
+    - frequently checking the ComfyUI cancel flag
+    - killing the subprocess tree if cancelled
+    """
+    _throw_if_comfyui_interrupted()
+
+    proc = _popen_with_process_group(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=cwd,
+        startupinfo=startupinfo,
+        env=env,
+    )
+
+    q: "queue.Queue[str]" = queue.Queue()
+
+    def _reader():
+        try:
+            for line in proc.stdout:
+                q.put(line)
+        except Exception:
+            pass
+
+    t = threading.Thread(target=_reader, daemon=True)
+    t.start()
+
+    try:
+        while True:
+            _throw_if_comfyui_interrupted()
+
+            drained_any = False
+            while True:
+                try:
+                    line = q.get_nowait()
+                except queue.Empty:
+                    break
+
+                drained_any = True
+                line = line.rstrip()
+                if line:
+                    print(f"{prefix}{line}")
+
+            ret = proc.poll()
+            if ret is not None:
+                while True:
+                    try:
+                        line = q.get_nowait()
+                    except queue.Empty:
+                        break
+                    line = line.rstrip()
+                    if line:
+                        print(f"{prefix}{line}")
+                return ret
+
+            if not drained_any:
+                time.sleep(0.1)
+
+    except comfy.model_management.InterruptProcessingException:
+        _terminate_process_tree(proc)
+        raise
+    finally:
+        if proc.poll() is None:
+            _terminate_process_tree(proc)
+
+        try:
+            if proc.stdout:
+                proc.stdout.close()
+        except Exception:
+            pass
 
 class MusubiWanLoraTrainer:
     """
@@ -549,26 +682,15 @@ class MusubiWanLoraTrainer:
                 f"--vae={vae_path}",
             ]
 
-            cache_latents_process = subprocess.Popen(
+            cache_latents_rc = _run_subprocess_with_cancel(
                 cache_latents_cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
                 cwd=musubi_path,
-                startupinfo=startupinfo,
                 env=env,
+                startupinfo=startupinfo,
+                prefix="[musubi-tuner] ",
             )
-
-            for line in cache_latents_process.stdout:
-                line = line.rstrip()
-                if line:
-                    print(f"[musubi-tuner] {line}")
-
-            cache_latents_process.wait()
-            if cache_latents_process.returncode != 0:
-                raise RuntimeError(f"Latent caching failed with code {cache_latents_process.returncode}")
+            if cache_latents_rc != 0:
+                raise RuntimeError(f"Latent caching failed with code {cache_latents_rc}")
 
             print(f"[Musubi Wan] VAE latents cached.")
 
@@ -586,26 +708,15 @@ class MusubiWanLoraTrainer:
                 "--batch_size=1",
             ]
 
-            cache_te_process = subprocess.Popen(
+            cache_te_rc = _run_subprocess_with_cancel(
                 cache_te_cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
                 cwd=musubi_path,
-                startupinfo=startupinfo,
                 env=env,
+                startupinfo=startupinfo,
+                prefix="[musubi-tuner] ",
             )
-
-            for line in cache_te_process.stdout:
-                line = line.rstrip()
-                if line:
-                    print(f"[musubi-tuner] {line}")
-
-            cache_te_process.wait()
-            if cache_te_process.returncode != 0:
-                raise RuntimeError(f"Text encoder caching failed with code {cache_te_process.returncode}")
+            if cache_te_rc != 0:
+                raise RuntimeError(f"Text encoder caching failed with code {cache_te_rc}")
 
             print(f"[Musubi Wan] Text encoder outputs cached.")
 
@@ -654,28 +765,15 @@ class MusubiWanLoraTrainer:
             print(f"[Musubi Wan] Images: {num_images}, Steps: {training_steps}, LR: {learning_rate}, Rank: {lora_rank}")
 
             # Run training
-            process = subprocess.Popen(
+            train_rc = _run_subprocess_with_cancel(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
                 cwd=musubi_path,
-                startupinfo=startupinfo,
                 env=env,
+                startupinfo=startupinfo,
+                prefix="[musubi-tuner] ",
             )
-
-            # Stream output
-            for line in process.stdout:
-                line = line.rstrip()
-                if line:
-                    print(f"[musubi-tuner] {line}")
-
-            process.wait()
-
-            if process.returncode != 0:
-                raise RuntimeError(f"Musubi Tuner training failed with code {process.returncode}")
+            if train_rc != 0:
+                raise RuntimeError(f"Musubi Tuner training failed with code {train_rc}")
 
             print(f"[Musubi Wan] Training completed!")
 
