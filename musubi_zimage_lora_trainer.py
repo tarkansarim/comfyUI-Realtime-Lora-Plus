@@ -995,6 +995,48 @@ class MusubiZImageLoraTrainer:
         # Create / reuse dataset + config
         created_dataset = False
         needs_dataset_setup = (not os.path.exists(config_path)) or (not os.path.isdir(dataset_dir))
+        
+        # Check if existing config has stale absolute paths (e.g., after folder rename)
+        # If so, we need to regenerate the config with current (relative) paths
+        needs_config_refresh = False
+        if os.path.exists(config_path) and os.path.isdir(dataset_dir):
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_text = f.read()
+                # Check if config uses absolute paths that don't exist
+                # Old configs have absolute paths like "E:/old-path/output/..." 
+                # New configs use relative paths like "./dataset"
+                if 'image_directory = "./' not in config_text and 'image_directory = ".' not in config_text:
+                    # Config uses absolute paths - check if they're valid
+                    import re as _re
+                    img_dir_match = _re.search(r'image_directory\s*=\s*"([^"]+)"', config_text)
+                    if img_dir_match:
+                        stored_img_dir = img_dir_match.group(1).replace('/', os.sep)
+                        if not os.path.isdir(stored_img_dir):
+                            print(f"[Musubi Z-Image] Config has stale absolute paths (folder was likely renamed)")
+                            print(f"[Musubi Z-Image] Stored: {stored_img_dir}")
+                            print(f"[Musubi Z-Image] Current: {dataset_dir}")
+                            needs_config_refresh = True
+            except Exception:
+                pass
+        
+        if needs_config_refresh and not needs_dataset_setup:
+            # Regenerate config with current relative paths (preserves existing cache)
+            print(f"[Musubi Z-Image] Regenerating config with relative paths for portability...")
+            config_content = generate_dataset_config(
+                image_folder=dataset_dir,
+                resolution=preset['resolution'],
+                batch_size=batch_size,
+                enable_bucket=enable_bucket,
+                bucket_no_upscale=bucket_no_upscale,
+                num_repeats=num_repeats,
+                cache_directory=cache_dir,
+                use_relative_paths=True,
+                subprocess_cwd=musubi_path,
+            )
+            save_config(config_content, config_path)
+            print(f"[Musubi Z-Image] Config refreshed: {config_path}")
+        
         if needs_dataset_setup:
             created_dataset = True
             os.makedirs(dataset_dir, exist_ok=True)
@@ -1036,7 +1078,7 @@ class MusubiZImageLoraTrainer:
 
             print(f"[Musubi Z-Image] Saved {num_images} images to {dataset_dir}")
 
-            # Generate dataset config
+            # Generate dataset config (use relative paths for portability across folder renames)
             config_content = generate_dataset_config(
                 image_folder=dataset_dir,
                 resolution=preset['resolution'],
@@ -1045,6 +1087,8 @@ class MusubiZImageLoraTrainer:
                 bucket_no_upscale=bucket_no_upscale,
                 num_repeats=num_repeats,
                 cache_directory=cache_dir,
+                use_relative_paths=True,
+                subprocess_cwd=musubi_path,
             )
 
             save_config(config_content, config_path)
@@ -1058,6 +1102,14 @@ class MusubiZImageLoraTrainer:
 
         env = os.environ.copy()
         env['PYTHONIOENCODING'] = 'utf-8'
+
+        # Add musubi-tuner src to PYTHONPATH so the musubi_tuner module can be found
+        musubi_src_dir = os.path.join(musubi_path, "src")
+        existing_pythonpath = env.get('PYTHONPATH', '')
+        if existing_pythonpath:
+            env['PYTHONPATH'] = musubi_src_dir + os.pathsep + existing_pythonpath
+        else:
+            env['PYTHONPATH'] = musubi_src_dir
 
         # Set CUDA_VISIBLE_DEVICES for multi-GPU support
         if enable_multi_gpu and device_ids:
@@ -1077,7 +1129,6 @@ class MusubiZImageLoraTrainer:
                 raise FileNotFoundError(f"Custom python.exe not found at: {python_path}")
         else:
             python_path = _get_venv_python_path(musubi_path)
-
 
         # VAE preflight (fast failure): detect obvious wrong VAE checkpoints (e.g. WAN VAE) before caching
         # This runs in the musubi venv python so it can always import safetensors.

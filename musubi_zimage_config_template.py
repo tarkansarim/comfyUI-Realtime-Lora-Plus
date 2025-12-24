@@ -15,6 +15,8 @@ def generate_dataset_config(
     bucket_no_upscale: bool = False,
     num_repeats: int = 10,
     cache_directory: str | None = None,
+    use_relative_paths: bool = True,
+    subprocess_cwd: str | None = None,
 ) -> str:
     """
     Generate a TOML dataset config file for Musubi Tuner Z-Image training.
@@ -22,8 +24,27 @@ def generate_dataset_config(
     Args:
         num_repeats: How many times to repeat each image per epoch.
                      Higher = fewer epochs for same step count, less overhead.
+        use_relative_paths: If True, convert absolute paths to relative paths
+                            based on subprocess_cwd. This makes configs portable
+                            when folders are renamed/moved.
+        subprocess_cwd: The working directory used when running the training subprocess.
+                        Paths will be made relative to this directory.
     Returns the config as a TOML string.
     """
+    
+    # Convert to relative paths if requested (makes config portable across folder renames)
+    if use_relative_paths and subprocess_cwd:
+        # Get relative paths from the subprocess working directory
+        try:
+            image_folder_rel = os.path.relpath(image_folder, subprocess_cwd)
+            cache_dir_rel = os.path.relpath(cache_directory, subprocess_cwd) if cache_directory else None
+            # Use relative paths (with ./ prefix for clarity)
+            image_folder = "./" + image_folder_rel.replace('\\', '/')
+            cache_directory = "./" + cache_dir_rel.replace('\\', '/') if cache_dir_rel else None
+        except ValueError:
+            # os.path.relpath fails if paths are on different drives on Windows
+            # Fall back to absolute paths
+            pass
 
     # Escape backslashes for TOML on Windows
     image_folder_escaped = image_folder.replace('\\', '/')
